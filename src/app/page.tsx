@@ -1,101 +1,171 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { addLead, getLeads, Lead } from "./api";
+
+interface FormData {
+  name: string;
+  email: string;
+  status: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    status: "",
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const fetchLeads = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`);
+    const data = await response.json();
+    setLeads(data);
+  };
+  
+  // Call fetchLeads on component mount
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+  
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const response = await addLead(formData);
+    if (!("error" in response)) {
+      setLeads([...leads, response]);
+      setFormData({ name: "", email: "", status: "" });
+
+      fetchLeads();
+    } else {
+      alert(response.error);
+    }
+  };
+
+  return (
+    <div className="bg-neutral-100 min-h-screen w-full">
+      <div className="relative overflow-x-auto flex flex-col items-center">
+        <div className="text-center text-xl font-bold mt-10 mb-2">Simple lead management</div>
+        <div className="w-full flex justify-center">
+          <table className="container w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <thead className="text-x text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              <tr>
+                <th scope="col" className="px-6 py-3">
+                  Name
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Lead ID
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Email
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Created At
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((lead) =>
+                lead._id ? (
+                  <tr key={lead._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                      {lead.name}
+                    </th>
+                    <td className="px-6 py-4">{lead._id}</td>
+                    <td className="px-6 py-4">{lead.email}</td>
+                    <td className="px-6 py-4">{lead.status}</td>
+                    <td className="px-6 py-4">{lead.createdAt}</td>
+                  </tr>
+                ) : null
+              )}
+            </tbody>
+
+          </table>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="w-full container flex justify-center mt-5">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+          >
+            Add new lead
+          </button>
+        </div>
+
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-opacity-50">
+            <div className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-lg w-96">
+              <h2 className="text-lg font-bold mb-4">Add New Lead</h2>
+
+              <form onSubmit={handleSubmit}>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Lead Name"
+                  className="w-full p-2 border rounded-md mb-3 dark:bg-gray-700 dark:text-white"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Lead Email"
+                  className="w-full p-2 border rounded-md mb-3 dark:bg-gray-700 dark:text-white"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+                <select
+                  className="w-full p-2 border rounded-md mb-3 dark:bg-gray-700 dark:text-white"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="" disabled>Select Lead Status</option>
+                  <option value="New">New</option>
+                  <option value="Engaged">Engaged</option>
+                  <option value="Proposal Sent">Proposal Sent</option>
+                  <option value="Closed Won">Closed-Won</option>
+                  <option value="Closed Lost">Closed-Lost</option>
+                </select>
+
+
+                {/* Submit & Close Buttons */}
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-600 bg-gray-200 px-4 py-2 rounded-lg me-2 hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="text-white bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg"
+                  >
+                    Save Lead
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
