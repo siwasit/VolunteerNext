@@ -10,6 +10,13 @@ To initialize the project, run:
 npm init
 ```
 
+## Environment Variables
+
+To connect to the database, ensure you have a `.env.local` file in the root directory with the following:
+```
+NEXT_PUBLIC_API_URL=https://volunteerapi-kw70.onrender.com
+```
+
 run the development server:
 
 ```bash
