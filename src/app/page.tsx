@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { addLead, getLeads, Lead } from "./api";
+import { addLead, Lead } from "./api";
 
 interface FormData {
   name: string;
